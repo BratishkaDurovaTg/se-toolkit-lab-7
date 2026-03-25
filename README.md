@@ -95,3 +95,52 @@ By the end of this lab, you should be able to say:
 ### Optional
 
 1. [Flutter Web Chatbot](./lab/tasks/optional/task-1.md)
+
+## Deploy
+
+Run the bot in Docker Compose together with the backend instead of `nohup`.
+
+### Required environment
+
+Fill in `.env.docker.secret` with real values for:
+
+- `BOT_TOKEN`
+- `LMS_API_KEY`
+- `LLM_API_KEY`
+- `LLM_API_MODEL`
+- `LLM_API_BASE_URL`
+
+For the bot container, use:
+
+- `LMS_API_BASE_URL=http://backend:8000`
+- `LLM_API_BASE_URL=http://host.docker.internal:42005/v1`
+
+The backend must be reached by Docker service name, not `localhost`, because inside the container `localhost` means the bot container itself.
+
+### Start the stack
+
+```bash
+cd ~/se-toolkit-lab-7
+pkill -f "bot.py" 2>/dev/null
+docker compose --env-file .env.docker.secret up --build -d
+docker compose --env-file .env.docker.secret ps
+```
+
+You should see `bot` running together with `backend`, `postgres`, and `caddy`.
+
+### Verify
+
+Check the bot container status and logs:
+
+```bash
+docker compose --env-file .env.docker.secret ps bot
+docker compose --env-file .env.docker.secret logs bot --tail 20
+```
+
+Then verify the full flow:
+
+1. Send `/start` in Telegram.
+2. Send `/health`.
+3. Ask `what labs are available?`
+
+The bot should answer from the container without Python tracebacks in the logs.
